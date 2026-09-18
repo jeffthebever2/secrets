@@ -1,8 +1,15 @@
-# See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.192.0/containers/python-3/.devcontainer/base.Dockerfile
+# NOTE: originally based on the ARCHIVED microsoft/vscode-dev-containers repo
+# (mcr.microsoft.com/vscode/devcontainers/python:0-*), frozen since ~2022. That
+# image line is no longer updated and its glibc is too old for the current
+# VS Code Server that Codespaces injects at connect time -- this is what was
+# causing "failed to start vs code remote server" / codespace shows
+# "Unavailable" right after the build succeeds. Switched to the actively
+# maintained replacement image, which tracks these compatibility requirements.
+# See: https://code.visualstudio.com/docs/remote/faq#_can-i-run-vs-code-server-on-older-linux-distributions
 
 # [Choice] Python version: 3, 3.9, 3.8, 3.7, 3.6
 ARG VARIANT="3.9"
-FROM mcr.microsoft.com/vscode/devcontainers/python:0-${VARIANT}
+FROM mcr.microsoft.com/devcontainers/python:${VARIANT}-bullseye
 
 # [Choice] Node.js version: none, lts/*, 16, 14, 12, 10
 ARG NODE_VERSION="none"
@@ -59,3 +66,13 @@ RUN apt-get update \
     # Clean up
     && rm pscale_0.77.0_linux_amd64.deb \
     && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/library-scripts/
+
+# desktop-lite-debian.sh writes /usr/local/share/desktop-init.sh (starts dbus,
+# tigervnc, noVNC, then `exec "$@"`) and docker-in-docker-debian.sh writes
+# /usr/local/share/docker-init.sh (starts dockerd, then `exec "$@"`). Neither
+# was ever wired up as the actual container entrypoint, so on a working
+# codespace neither the desktop nor the inner Docker daemon would actually
+# start. Chain them: desktop-init hands off to docker-init, which hands off
+# to the real long-running command.
+ENTRYPOINT [ "/usr/local/share/desktop-init.sh" ]
+CMD [ "/usr/local/share/docker-init.sh", "sleep", "infinity" ]
