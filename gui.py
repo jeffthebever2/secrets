@@ -4,7 +4,7 @@ import constants
 import os
 import io
 from urllib.parse import urlparse
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 from PIL import Image
 import pymysql.cursors
 

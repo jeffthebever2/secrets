@@ -2,7 +2,7 @@
 import time
 import redis
 import os
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 import os
 from PIL import Image
 import io
