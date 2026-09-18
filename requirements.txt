@@ -1,4 +1,4 @@
 redis==5.0.8
-FreeSimpleGUI==5.1.1
+PySimpleGUI
 pillow==10.4.0
 PyMySQL==1.1.1

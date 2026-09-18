@@ -2,7 +2,7 @@
 import time
 import subprocess
 import argparse
-import FreeSimpleGUI as sg
+import PySimpleGUI as sg
 import re
 import subprocess
 
