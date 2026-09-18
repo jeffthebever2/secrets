@@ -218,8 +218,14 @@ startInBackgroundIfNotRunning()
     echo -e "\n** \$(date) **" | sudoIf tee -a /tmp/\$1.log > /dev/null
     if ! pidof \$1 > /dev/null; then
         keepRunningInBackground "\$@"
+        wait_secs=0
         while ! pidof \$1 > /dev/null; do
             sleep 1
+            wait_secs=\$((wait_secs + 1))
+            if [ "\${wait_secs}" -ge 20 ]; then
+                log "\$1 did not start within 20s -- continuing without it so the container doesn't hang. See /tmp/\$1.log."
+                return
+            fi
         done
         log "\$1 started."
     else
@@ -268,8 +274,14 @@ if [ -f "/var/run/dbus/pid" ] && ! pidof dbus-daemon  > /dev/null; then
     sudoIf rm -f /var/run/dbus/pid
 fi
 sudoIf /etc/init.d/dbus start 2>&1 | sudoIf tee -a /tmp/dbus-daemon-system.log > /dev/null
+dbus_wait_secs=0
 while ! pidof dbus-daemon > /dev/null; do
     sleep 1
+    dbus_wait_secs=\$((dbus_wait_secs + 1))
+    if [ "\${dbus_wait_secs}" -ge 20 ]; then
+        log "dbus did not start within 20s -- continuing without it so the container doesn't hang. See /tmp/dbus-daemon-system.log."
+        break
+    fi
 done
 
 # Startup tigervnc server and fluxbox
